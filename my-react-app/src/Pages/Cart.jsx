@@ -1,57 +1,64 @@
-import React from "react";
-import { useCart } from "react-use-cart";
-import './Cart.css'; 
+import React, { useState } from 'react';
+import { useCart } from 'react-use-cart';
+import './Home.css';
 
-const Cart = () => {
-  const {
-    isEmpty,
-    totalUniqueItems,
-    items,
-    totalItems,
-    cartTotal,
-    updateItemQuantity,
-    removeItem,
-    emptyCart,
-  } = useCart();
+function Home({ products }) {
+  const [expanded, setExpanded] = useState({});
+  const { addItem, removeItem, inCart } = useCart();
 
-  if (isEmpty) return <h1 className="empty-cart">Your Cart is Empty</h1>;
+  const toggleDescription = (id) => {
+    setExpanded((prevExpanded) => ({
+      ...prevExpanded,
+      [id]: !prevExpanded[id],
+    }));
+  };
 
-  return (
-    <section className="cart-section">
-      <div className="cart-container">
-        <div className="cart-header">
-          <h5>
-            Cart ({totalUniqueItems}) — Total Items: {totalItems}
-          </h5>
-        </div>
-        <table className="cart-table">
-          <tbody>
-            {items.map((item, index) => (
-              <tr key={index} className="cart-row">
-                <td>
-                  <img src={item.image} alt="" className="cart-image" />
-                </td>
-                <td>{item.title}</td>
-                <td>${item.price}</td>
-                <td>Quantity ({item.quantity})</td>
-                <td>
-                  <button onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>-</button>
-                  <button onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</button>
-                  <button onClick={() => removeItem(item.id)}>Remove Item</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="cart-total">
-          <h2>Total Price: ${cartTotal.toFixed(2)}</h2>
-        </div>
-        <div className="cart-actions">
-          <button onClick={() => emptyCart()} className="clear-cart-btn">Clear Cart</button>
+  const handleClick = (product) => {
+    if (inCart(product.id)) {
+      removeItem(product.id);
+    } else {
+      addItem(product);
+    }
+  };
+
+  const productList = products.map((product) => (
+    <div className='product-card' key={product.id}>
+      <div className='card'>
+        <img
+          src={product.image}
+          className='card-image'
+          alt='Product'
+        />
+        <div className='card-body'>
+          <h5 className='card-title'>{product.title}</h5>
+          <h5 className='card-category'>{product.category.toUpperCase()}</h5>
+          <p className='card-description'>
+            {expanded[product.id]
+              ? product.description
+              : `${product.description.slice(0, 100)}...`}
+          </p>
+          {product.description.length > 100 && (
+            <button
+              className='read-more-button'
+              onClick={() => toggleDescription(product.id)}
+            >
+              {expanded[product.id] ? 'Read Less' : 'Read More'}
+            </button>
+          )}
+          <p className='card-price'>Price: ${product.price}</p>
+
+          <button
+            className={`action-button ${inCart(product.id) ? 'remove' : 'add'}`}
+            onClick={() => handleClick(product)}
+          >
+            {inCart(product.id) ? 'Remove from cart' : 'Add to cart'}
+          </button>
         </div>
       </div>
-    </section>
-  );
-};
+    </div>
+  ));
 
-export default Cart;
+  return <div className='product-grid'>{productList}</div>;
+}
+
+export default Home;
